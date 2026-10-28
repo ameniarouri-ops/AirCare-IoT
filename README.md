@@ -1,4 +1,4 @@
-# AirCare+ — IoT Air Quality Monitoring System
+﻿# AirCare+ — IoT Air Quality Monitoring System
 
 **Intern:** Amani Arouri
 **Specialty:** Embedded Systems / IoT Engineering
@@ -11,10 +11,10 @@
 AirCare+ is an air quality monitoring node built around an ESP32.
 It reads temperature and humidity (DHT22) and particulate matter
 (PMS7003), then publishes the data over MQTT with TLS. A web dashboard
-shows the data live, and a Python script saves it to CSV.
+shows the data, and a Python script saves it to CSV.
 
-**Current status: simulation and software. Real hardware tests are
-still to do.**
+**Current status: simulation and software. Real hardware tests and some
+security changes are still to do (see Status).**
 
 ---
 
@@ -30,9 +30,11 @@ Sensors (DHT22, PMS7003) → ESP32 → MQTT (HiveMQ Cloud, TLS, port 8883)
 - [x] Environment setup (PlatformIO, Wokwi)
 - [x] DHT22 firmware and wiring simulated in Wokwi
 - [x] MQTT publishing and Python subscriber
-- [x] Wi-Fi reconnect and watchdog
-- [x] Security changes in the code (see below)
-- [ ] Firmware build verified after the security changes
+- [x] Wi-Fi reconnect logic
+- [x] Credentials removed from the code (`secrets.h` is git-ignored)
+- [x] MQTT broker users: read-only dashboard user, separate device user
+- [ ] TLS with CA certificate, watchdog, PMS7003 reading on every loop
+      (build passes; live broker and hardware tests still to do)
 - [ ] Live dashboard tested on GitHub Pages
 - [ ] PMS7003 added to the Wokwi diagram
 - [ ] Physical ESP32 + sensors connected (issue #1)
@@ -53,31 +55,29 @@ in PlatformIO, Python serial logger to CSV, MQTT research and schematic.
 MQTT, Python MQTT subscriber, Wi-Fi provisioning compared, data flow
 diagram.
 
-**Week 4 — Reliability:** Wi-Fi reconnect and watchdog, sensor accuracy
-test, system summary, demo video, GitHub Issues for Month 2.
+**Week 4 — Reliability:** Wi-Fi reconnect, sensor accuracy test, system
+summary, demo video, GitHub Issues for Month 2.
 
 ## Month 2 (weeks 5–8)
 
 - Added the PMS7003 particulate sensor (UART) next to the DHT22.
 - Moved from a local Mosquitto broker to HiveMQ Cloud with TLS (port 8883).
-- Built a live web dashboard (WebSockets) hosted on GitHub Pages.
+- Built a web dashboard (WebSockets) for GitHub Pages.
 - Python logger (`mqtt_logger.py`) that saves MQTT data to CSV.
-- Made the firmware more reliable: non-blocking MQTT reconnect, Wi-Fi loss
-  handled separately, PMS7003 buffer cleanup with checksum validation.
-- Security: credentials in a git-ignored `secrets.h`, CA certificate,
-  password-protected setup portal.
+- Reliability and security work on the firmware (in progress, see Status).
 
 ---
 
 ## Security
 
-- Credentials are in `secrets.h`, which is git-ignored. Only
+- Credentials live in `secrets.h`, which is git-ignored. Only
   `secrets.example.h` is in the repo.
-- The ESP32 checks the broker with a CA certificate (ISRG Root X1)
-  instead of skipping verification.
-- The Wi-Fi setup portal is protected by a password.
-- The dashboard uses a separate read-only MQTT user. Its password is
-  visible in the browser by design, so that user can only subscribe.
+- The MQTT broker has two users: the device (publish and subscribe) and
+  a dashboard user that can only subscribe. The dashboard password is
+  visible in the browser by design, so that user cannot publish.
+- The logger reads its login from environment variables.
+- Next: CA certificate check in the firmware (instead of skipping
+  verification) and a password for the Wi-Fi setup portal.
 
 ---
 
@@ -99,10 +99,9 @@ GitHub Pages, Wokwi
 
 ## What I learned
 - How MQTT works: broker, topics, publish and subscribe.
-- Why TLS and a CA certificate matter, and why passwords must never be
-  committed to a public repo.
-- How to make firmware keep running when Wi-Fi or the broker drops.
-- How to read a sensor over UART and check its data with a checksum.
+- Why passwords must never be committed to a public repo, and how to
+  rotate them when one leaks.
+- Why a read-only user matters when a password is visible in a browser.
 
 ---
 
