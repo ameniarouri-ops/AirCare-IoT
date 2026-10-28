@@ -1,13 +1,20 @@
-import paho.mqtt.client as mqtt
-import csv
+﻿import csv
 import datetime
+import os
+
+MQTT_USER = os.environ.get("AIRCARE_MQTT_USER")
+MQTT_PASS = os.environ.get("AIRCARE_MQTT_PASS")
+if not MQTT_USER or not MQTT_PASS:
+    raise SystemExit(
+        "Set AIRCARE_MQTT_USER and AIRCARE_MQTT_PASS environment variables."
+    )
+
+import paho.mqtt.client as mqtt
 
 CSV_FILE = "mqtt_log.csv"
-BROKER = "ad2707b4f5904efb9e949f4ef799303b.s1.eu.hivemq.cloud"
+BROKER = "a8984e032441467797687728dde49d14.s1.eu.hivemq.cloud"
 PORT = 8883
 TOPIC = "aircare/#"
-MQTT_USER = "esp32device"
-MQTT_PASS = "AirCare2026_Esp32!"
 
 def on_connect(client, userdata, flags, rc):
     print("Connected to MQTT Broker!")
